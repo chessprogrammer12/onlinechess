@@ -3,221 +3,131 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OnlineChess — demo</title>
-  <!-- Chessboard.js and chess.js from CDNs -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" integrity="" crossorigin="anonymous">
+  <title>OnlineChess — Chessground Edition</title>
   <style>
     :root{
-      --bg:#0b1220; --panel:#0f1724; --accent:#60a5fa; --muted:#94a3b8; --card:#0b1220; color-scheme: dark;
+      --bg:#0b1220; --panel:#0f1724; --accent:#60a5fa; --muted:#94a3b8; color-scheme: dark;
     }
-    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background: linear-gradient(180deg,#071028 0%, #071a2a 100%); color:#e6eef8}
-    .app{max-width:1200px;margin:32px auto;padding:20px;display:grid;gap:18px;grid-template-columns: 640px 1fr}
-    .header{display:flex;align-items:center;gap:12px}
-    .logo{font-weight:700;font-size:20px;color:var(--accent);text-decoration:none}
-    .board-panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
-    #board{width:560px;margin:0 auto}
-    .controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
-    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer}
-    button.primary{background:linear-gradient(90deg,var(--accent),#3b82f6);border:none;color:white}
-    .side-panel{display:flex;flex-direction:column;gap:12px}
-    .card{background:rgba(255,255,255,0.02);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-    .players{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .clock{font-size:20px;font-weight:700}
-    .moves{height:200px;overflow:auto;background:transparent;padding:10px;border-radius:8px}
-    .chat-input{display:flex;gap:8px}
-    .chat-input textarea{flex:1;height:48px;border-radius:8px;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
-    .chat-messages{height:150px;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
-    .msg{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:13px}
-    @media (max-width:900px){.app{grid-template-columns:1fr;max-width:900px}.board-panel{order:0}.side-panel{order:1}}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui;background:#0b1220;color:#e6eef8}
+    .app{max-width:1200px;margin:20px auto;padding:20px;display:grid;gap:20px;grid-template-columns:650px 1fr}
+    .board-panel{background:#0f1724;border-radius:12px;padding:16px;box-shadow:0 6px 30px rgba(0,0,0,0.5)}
+    #board{width:600px;height:600px;margin:auto;border-radius:12px;overflow:hidden}
+    .side-panel{display:flex;flex-direction:column;gap:16px}
+    .card{background:#0f1724;padding:14px;border-radius:12px}
+    #moves{height:250px;overflow:auto}
+    #chat{height:160px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+    textarea{background:#0b1220;border:1px solid #1e293b;color:#e6eef8;border-radius:8px;padding:8px;width:100%}
+    button{background:#1e293b;color:#e6eef8;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.primary{background:var(--accent)}
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="board-panel card">
-      <div class="header">
-        <a class="logo" href="#">onlinechess.org</a>
-        <div style="margin-left:auto;color:var(--muted)">Local demo — two players on one device</div>
-      </div>
-
+    <div class="board-panel">
+      <h2>onlinechess.org — Chessground</h2>
       <div id="board"></div>
-
-      <div class="controls">
-        <button id="newBtn" class="primary">New Game</button>
+      <div style="margin-top:15px;display:flex;gap:10px;justify-content:center">
+        <button id="newBtn" class="primary">New</button>
         <button id="undoBtn">Undo</button>
         <button id="flipBtn">Flip</button>
-        <button id="fenBtn">Export FEN</button>
-        <button id="pgnBtn">Export PGN</button>
-      </div>
-
-      <div style="margin-top:12px;display:flex;justify-content:center;gap:30px;color:var(--muted)">
-        <div>
-          <div style="font-size:12px">White</div>
-          <div id="whiteClock" class="clock">00:10:00</div>
-        </div>
-        <div>
-          <div style="font-size:12px">Black</div>
-          <div id="blackClock" class="clock">00:10:00</div>
-        </div>
       </div>
     </div>
 
     <div class="side-panel">
       <div class="card">
-        <div style="font-weight:700;margin-bottom:8px">Moves</div>
-        <div id="moves" class="moves"></div>
+        <h3>Moves</h3>
+        <div id="moves"></div>
       </div>
 
       <div class="card">
-        <div style="font-weight:700;margin-bottom:8px">Chat</div>
-        <div id="chat" class="chat-messages"></div>
-        <div class="chat-input" style="margin-top:8px">
-          <textarea id="chatInput" placeholder="Please be nice in the chat!"></textarea>
-          <button id="sendChat">Send</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:700;margin-bottom:8px">Game Info</div>
-        <div style="font-size:13px;color:var(--muted)">Click and drag pieces to move. Legal moves are enforced (powered by chess.js). This demo uses Chessboard.js for the UI. You can export FEN/PGN or copy them.</div>
+        <h3>Chat</h3>
+        <div id="chat"></div>
+        <textarea id="chatInput" placeholder="Say something nice..."></textarea>
+        <button id="sendChat">Send</button>
       </div>
     </div>
   </div>
 
-  <!-- Libraries -->
+  <!-- Chessground + Chess.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chessground@8.1.2/dist/chessground.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessground@8.1.2/assets/chessground.base.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessground@8.1.2/assets/themes/blue.css" />
 
   <script>
-    // Create Chess instance from chess.js
     const game = new Chess();
+    let flipped = false;
 
-    // Create the board using Chessboard.js
-    const board = Chessboard('board', {
-      draggable: true,
-      position: 'start',
-      pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png',
-      onDragStart: (source, piece, position, orientation) => {
-        if (game.game_over()) return false;
-        // only allow dragging if the piece belongs to the side to move
-        if ((game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-          return false;
+    const ground = Chessground(document.getElementById('board'), {
+      fen: game.fen(),
+      orientation: 'white',
+      draggable: {
+        enabled: true,
+        distance: 2,
+      },
+      movable: {
+        free: false,
+        color: 'white',
+        dests: computeDests(),
+        events: {
+          after: onMove
         }
       },
-      onDrop: (source, target) => {
-        const move = game.move({ from: source, to: target, promotion: 'q' });
-        if (move === null) return 'snapback';
-        updateStatus();
-      },
-      onSnapEnd: () => {
-        board.position(game.fen());
-      }
+      animation: { enabled: true, duration: 200 },
+      highlight: { lastMove: true, check: true }
     });
 
-    // UI elements
-    const movesEl = document.getElementById('moves');
-    const newBtn = document.getElementById('newBtn');
-    const undoBtn = document.getElementById('undoBtn');
-    const flipBtn = document.getElementById('flipBtn');
-    const fenBtn = document.getElementById('fenBtn');
-    const pgnBtn = document.getElementById('pgnBtn');
-
-    function updateMoves(){
-      const history = game.history({ verbose: true });
-      let html = '';
-      for(let i=0;i<history.length;i+=2){
-        const moveNum = Math.floor(i/2)+1;
-        const white = history[i] ? history[i].san : '';
-        const black = history[i+1] ? history[i+1].san : '';
-        html += `<div style=\"display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px dashed rgba(255,255,255,0.02)\"><div>${moveNum}. ${white}</div><div>${black}</div></div>`;
-      }
-      movesEl.innerHTML = html;
-      movesEl.scrollTop = movesEl.scrollHeight;
+    function computeDests(){
+      const dests = new Map();
+      game.SQUARES.forEach(s => {
+        const moves = game.moves({square:s, verbose:true});
+        if(moves.length) dests.set(s, moves.map(m=>m.to));
+      });
+      return dests;
     }
 
-    function updateStatus(){
-      updateMoves();
-      if (game.in_checkmate()){
-        alert('Checkmate — ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins');
-      } else if (game.in_draw()){
-        alert('Draw');
-      } else if (game.in_check()){
-        // small visual cue could be added
-      }
+    function onMove(from, to){
+      const move = game.move({from, to, promotion:'q'});
+      if(!move) return;
+      ground.set({fen:game.fen(), movable:{dests:computeDests(), color:game.turn()==='w'?'white':'black'}});
+      addMove(move.san);
     }
 
-    newBtn.addEventListener('click', ()=>{
+    const movesDiv = document.getElementById('moves');
+    function addMove(san){
+      const p = document.createElement('div');
+      p.textContent = san;
+      movesDiv.appendChild(p);
+      movesDiv.scrollTop = movesDiv.scrollHeight;
+    }
+
+    document.getElementById('newBtn').onclick = ()=>{
       game.reset();
-      board.start(true);
-      updateStatus();
-    });
+      ground.set({fen:game.fen(), movable:{dests:computeDests(), color:'white'}});
+      movesDiv.innerHTML='';
+    };
 
-    undoBtn.addEventListener('click', ()=>{
+    document.getElementById('undoBtn').onclick = ()=>{
       game.undo();
-      board.position(game.fen());
-      updateStatus();
-    });
+      ground.set({fen:game.fen(), movable:{dests:computeDests(), color:game.turn()==='w'?'white':'black'}});
+    };
 
-    flipBtn.addEventListener('click', ()=>{
-      board.flip();
-    });
+    document.getElementById('flipBtn').onclick = ()=>{
+      flipped = !flipped;
+      ground.set({orientation: flipped ? 'black' : 'white'});
+    };
 
-    fenBtn.addEventListener('click', ()=>{
-      const fen = game.fen();
-      prompt('FEN (copy):', fen);
-    });
-
-    pgnBtn.addEventListener('click', ()=>{
-      const pgn = game.pgn();
-      prompt('PGN (copy):', pgn);
-    });
-
-    // Simple chat
+    // Chat
     const chat = document.getElementById('chat');
     const chatInput = document.getElementById('chatInput');
-    const sendChat = document.getElementById('sendChat');
-    sendChat.addEventListener('click', ()=>{
-      const text = chatInput.value.trim();
-      if(!text) return;
-      const node = document.createElement('div'); node.className='msg'; node.textContent = 'You: ' + text;
-      chat.appendChild(node);
-      chatInput.value=''; chat.scrollTop = chat.scrollHeight;
-    });
-
-    // Basic clocks (10 minutes each) — simple decrement by seconds when side to move
-    let whiteSeconds = 10*60;
-    let blackSeconds = 10*60;
-    let clockInterval = null;
-
-    function formatTime(s){
-      const m = Math.floor(s/60).toString().padStart(2,'0');
-      const sec = (s%60).toString().padStart(2,'0');
-      return `${m}:${sec}`;
-    }
-
-    function startClock(){
-      if(clockInterval) clearInterval(clockInterval);
-      clockInterval = setInterval(()=>{
-        if(game.turn() === 'w'){
-          whiteSeconds = Math.max(0, whiteSeconds-1);
-          document.getElementById('whiteClock').textContent = formatTime(whiteSeconds);
-        } else {
-          blackSeconds = Math.max(0, blackSeconds-1);
-          document.getElementById('blackClock').textContent = formatTime(blackSeconds);
-        }
-        if(whiteSeconds===0 || blackSeconds===0){
-          clearInterval(clockInterval);
-          alert('Time over — ' + (whiteSeconds===0 ? 'Black' : 'White') + ' wins on time');
-        }
-      },1000);
-    }
-
-    // Start clock on first move
-    document.addEventListener('click', ()=>{
-      if(!clockInterval) startClock();
-    }, { once: true });
-
-    // initialise
-    updateStatus();
+    document.getElementById('sendChat').onclick = ()=>{
+      const t = chatInput.value.trim();
+      if(!t) return;
+      const d = document.createElement('div'); d.textContent = 'You: ' + t;
+      chat.appendChild(d);
+      chatInput.value='';
+      chat.scrollTop = chat.scrollHeight;
+    };
   </script>
 </body>
 </html>
